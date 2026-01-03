@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沉默的交互 - 设计案例分析</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif; /* 模仿原网页的字体 */
+            line-height: 1.5;
+            color: #000;
+            background-color: #fff;
+            margin: 20px;
+            max-width: 1000px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .content-block {
+            margin-bottom: 30px;
+            overflow: auto; /* 清除浮动 */
+        }
+
+        .image-left {
+            float: left;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            max-width: 300px; /* 限制图片宽度，模仿原网页布局 */
+            border: 1px solid #ccc;
+        }
+
+        .text-content {
+            overflow: hidden; /* 让文字环绕或适应 */
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .highlight {
+            color: #d9534f; /* 强调色的红色 */
+            font-weight: bold;
+        }
+
+        .theory-box {
+            background-color: #f9f9f9;
+            border-left: 5px solid #ccc;
+            padding: 10px 20px;
+            margin: 20px 0;
+        }
+
+        .suggestion {
+            font-weight: bold;
+            color: #000;
+        }
+        
+        /* 针对公式图片的样式 */
+        .formula-img {
+            display: block;
+            margin: 10px 0;
+            max-height: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>你想调节氧气流速吗？(沉默的交互)</h1>
+
+    <div class="content-block">
+        <img src="bad_panel.jpg" alt="有问题的触控面板" class="image-left">
+        
+        <div class="text-content">
+            <p>在我们的便携式制氧机研发竞品调研中，遇到了一款采用“全平面触控”设计的设备。第一次使用时，我试图调节机器的氧气流速。我看到控制区有“+”和“-”两个调节键，按照通用医疗设备的惯例，我理所当然地认为这是用来控制“氧气流速”的。</p>
+
+            <p>我按下了“+”键，但是机器没有反应。风没有变大，机器没有声音，手指也没有任何感觉。我以为是我没按重，于是我又用力按了几下。结果经测试发现，这个按键实际控制的是“氧气浓度”，而且由于机器性能限制，<span class="highlight">我拼命调大参数，反而导致浓度从 90% 跌到了 82%</span>。</p>
+
+            <p>这是一个典型的“沉默交互”。因为没有触觉反馈，也没有语音提示（默认关闭），我根本不知道机器是否接收到了指令。这种不确定感导致我不断地重复按压，造成了严重的认知混淆。</p>
+        </div>
+    </div>
+
+    <div class="content-block">
+        <h3>设计原理分析</h3>
+        <p>这个设计同时掉进了唐·诺曼所说的两个“海湾”：</p>
+        <ul>
+            <li><strong>执行海湾：</strong> 所有的按钮看起来都一样，且功能映射（Mapping）错误。用户想调流速，却调了浓度。</li>
+            <li><strong>评估海湾：</strong> 反馈（Feedback）缺失。用户操作后，无法判断按键是否生效，掉进了“反馈真空”。</li>
+        </ul>
+
+        <div class="theory-box">
+            <p>此外，这还违反了<strong>费茨定律 (Fitts's Law)</strong>。根据公式：</p>
+            <img src="formula.png" alt="费茨定律公式" class="formula-img">
+            <p>由于屏幕很小，按钮尺寸 (S) 也很小，导致难度指数 (ID) 很大。当用户点击没有反应时，潜意识会认为“是因为按钮太小我没点中”，而不是“系统卡顿”，从而导致重复误操作。</p>
+        </div>
+    </div>
+
+    <div class="content-block">
+        <h3>Design suggestion (设计建议)</h3>
+        
+        <img src="good_panel.jpg" alt="改进后的设计" class="image-left">
+
+        <div class="text-content">
+            <p class="suggestion">最好的解决办法是建立正确的映射并提供多模态反馈。</p>
+            
+            <p>1. <strong>可视化映射：</strong> 就像图中这款口碑较好的“鱼跃”制氧机一样，通过清晰的数码管显示实时浓度。如果高流速会导致浓度降低，屏幕应通过颜色变化（如变红）提前告知用户。</p>
+
+            <p>2. <strong>物理反馈：</strong> 在触控屏设计中加入<strong>阻尼感</strong>或触觉反馈，或者直接把关键按键做得更大（增大 S），降低费茨定律中的难度指数。一定要让机器“开口说话”，告诉用户：“我收到你的指令了”。</p>
+        </div>
+    </div>
+
+</body>
+</html>
