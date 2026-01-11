@@ -142,14 +142,14 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 20px;
+            gap: 15px; /* 间距稍微调小以容纳更多按钮 */
             height: 100%;
             padding: 20px;
         }
 
         .big-btn {
             flex: 1;
-            font-size: 28px;
+            font-size: 20px; /* 稍微调小字体以适应5个按钮 */
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -163,6 +163,14 @@
         
         .btn-breath { border-color: #00ffff; color: #00ffff; }
         .btn-breath:active { background: #00ffff; color: #000; }
+
+        /* [新增] 光敏模式按钮样式 (紫红色) */
+        .btn-auto { border-color: #ff00ff; color: #ff00ff; }
+        .btn-auto:active { background: #ff00ff; color: #000; }
+
+        /* [新增] 舵机模式按钮样式 (橙色) */
+        .btn-servo { border-color: #FFA500; color: #FFA500; }
+        .btn-servo:active { background: #FFA500; color: #000; }
         
         .btn-off { border-color: #ff0000; color: #ff0000; }
         .btn-off:active { background: #ff0000; color: #000; }
@@ -247,7 +255,7 @@
             
             <div class="panel-title" style="font-size:18px; margin-top:10px; border:none;">System Log</div>
             <div id="send-log" class="log-area">
-                <div>[System] Smart Lamp Controller V1.0</div>
+                <div>[System] Smart Lamp Controller V1.2</div>
                 <div>[Ready] Waiting for connection...</div>
             </div>
         </div>
@@ -261,6 +269,15 @@
                 <button class="matlab-btn big-btn btn-breath" onclick="sendCmd(2)">
                     <span>≈</span> BREATHING MODE
                 </button>
+                
+                <button class="matlab-btn big-btn btn-auto" onclick="sendCmd(3)">
+                    <span>👁</span> LIGHT SENSITIVE
+                </button>
+
+                <button class="matlab-btn big-btn btn-servo" onclick="sendCmd(4)">
+                    <span>🦾</span> SERVO MODE
+                </button>
+
                 <button class="matlab-btn big-btn btn-off" onclick="sendCmd(0)">
                     <span>○</span> TURN OFF
                 </button>
@@ -370,6 +387,8 @@
                 let action = "";
                 if(value === 1) action = "CMD: OPEN LIGHT";
                 else if(value === 2) action = "CMD: BREATH MODE";
+                else if(value === 3) action = "CMD: LIGHT SENSITIVE"; 
+                else if(value === 4) action = "CMD: SERVO MODE"; // [新增] 舵机模式
                 else if(value === 0) action = "CMD: TURN OFF";
                 addLog(action);
                 
