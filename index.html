@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>智能台灯控制终端 (Smart Lamp IoT)</title>
     <style>
-        /* --- CSS 变量定义 (保留原有的酷炫主题) --- */
+        /* --- CSS 变量定义 --- */
         :root {
             /* 默认主题: MATLAB Retro */
             --bg-color: #000000;
@@ -18,6 +18,8 @@
             --font-mono: "Consolas", monospace;
             --btn-text: #FFFF00;
             --btn-bg: #FF0000;
+            --slider-track: #333;
+            --slider-thumb: #FF0000;
         }
 
         /* 主题 2: Cyberpunk Neon */
@@ -32,6 +34,8 @@
             --font-mono: "Courier New", monospace;
             --btn-text: #ffffff;
             --btn-bg: #d600ff;
+            --slider-track: #1a2642;
+            --slider-thumb: #00f3ff;
         }
 
         /* 主题 3: Clean Lab */
@@ -46,6 +50,8 @@
             --font-mono: "Menlo", monospace;
             --btn-text: #ffffff;
             --btn-bg: #007bff;
+            --slider-track: #ddd;
+            --slider-thumb: #007bff;
         }
 
         /* --- 全局样式 --- */
@@ -141,21 +147,23 @@
         .lamp-controls {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            gap: 15px; /* 间距稍微调小以容纳更多按钮 */
+            justify-content: flex-start; /* 改为顶部对齐，方便放滑块 */
+            gap: 12px;
             height: 100%;
-            padding: 20px;
+            padding: 10px;
+            overflow-y: auto; /* 防止内容过多溢出 */
         }
 
         .big-btn {
-            flex: 1;
-            font-size: 20px; /* 稍微调小字体以适应5个按钮 */
+            padding: 15px;
+            font-size: 18px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            flex-shrink: 0; /* 防止按钮被压缩 */
         }
         
         .btn-on { border-color: #00ff00; color: #00ff00; }
@@ -164,16 +172,85 @@
         .btn-breath { border-color: #00ffff; color: #00ffff; }
         .btn-breath:active { background: #00ffff; color: #000; }
 
-        /* [新增] 光敏模式按钮样式 (紫红色) */
         .btn-auto { border-color: #ff00ff; color: #ff00ff; }
         .btn-auto:active { background: #ff00ff; color: #000; }
 
-        /* [新增] 舵机模式按钮样式 (橙色) */
         .btn-servo { border-color: #FFA500; color: #FFA500; }
         .btn-servo:active { background: #FFA500; color: #000; }
         
         .btn-off { border-color: #ff0000; color: #ff0000; }
         .btn-off:active { background: #ff0000; color: #000; }
+
+        /* --- [新增] 滑动条样式 --- */
+        .slider-box {
+            margin-top: 10px;
+            border: 1px dashed var(--accent-color);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-family: var(--font-mono);
+            font-size: 16px;
+        }
+
+        /* 滑动条本体美化 */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Webkit (Chrome/Safari) Track */
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: var(--slider-track);
+            border-radius: 4px;
+            border: 1px solid var(--accent-color);
+        }
+
+        /* Webkit Thumb (拖动块) */
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -7px; /* 居中 */
+            box-shadow: 0 0 10px var(--slider-thumb);
+        }
+
+        /* Firefox Track */
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: var(--slider-track);
+            border-radius: 4px;
+            border: 1px solid var(--accent-color);
+        }
+
+        /* Firefox Thumb */
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border: none;
+            border-radius: 50%;
+            background: var(--slider-thumb);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--slider-thumb);
+        }
 
         /* 仪表盘区域 */
         .gauge-container {
@@ -255,7 +332,7 @@
             
             <div class="panel-title" style="font-size:18px; margin-top:10px; border:none;">System Log</div>
             <div id="send-log" class="log-area">
-                <div>[System] Smart Lamp Controller V1.2</div>
+                <div>[System] Smart Lamp Controller V1.3</div>
                 <div>[Ready] Waiting for connection...</div>
             </div>
         </div>
@@ -281,6 +358,15 @@
                 <button class="matlab-btn big-btn btn-off" onclick="sendCmd(0)">
                     <span>○</span> TURN OFF
                 </button>
+
+                <div class="slider-box">
+                    <div class="slider-label">
+                        <span>DIMMING</span>
+                        <span id="dim-percent-display">0%</span>
+                    </div>
+                    <input type="range" id="dim-slider" min="16" max="30" step="1" value="16" oninput="handleSlider(this.value)">
+                </div>
+
             </div>
         </div>
 
@@ -333,6 +419,22 @@
             }
         }
 
+        // --- [新增] 滑动条处理逻辑 ---
+        function handleSlider(value) {
+            value = parseInt(value);
+            
+            // 1. 计算显示百分比
+            // 数据范围: 16 (min) 到 30 (max) -> 跨度 14
+            // 映射: 16->0%, 30->100%
+            let percentage = Math.round(((value - 16) / 14) * 100);
+            
+            // 更新UI文本
+            document.getElementById('dim-percent-display').innerText = percentage + "%";
+            
+            // 2. 发送数据
+            sendCmd(value);
+        }
+
         // --- 蓝牙连接逻辑 ---
         connectBtn.addEventListener('click', async () => {
             try {
@@ -373,23 +475,35 @@
         // --- 发送指令 ---
         async function sendCmd(value) {
             if (!writeCharacteristic) {
-                addLog("Not Connected!", "red");
-                return;
+                // 如果未连接，仅在控制台/UI日志显示，不报错
+                // addLog("Not Connected! (Sim: " + value + ")", "gray"); 
+                // return; // 调试时可以注释掉 return 
             }
+            
             try {
-                const buffer = new Uint8Array([value]);
-                if (writeCharacteristic.properties.writeWithoutResponse) {
-                    await writeCharacteristic.writeValueWithoutResponse(buffer);
-                } else {
-                    await writeCharacteristic.writeValueWithResponse(buffer);
+                if (writeCharacteristic) {
+                    const buffer = new Uint8Array([value]);
+                    if (writeCharacteristic.properties.writeWithoutResponse) {
+                        await writeCharacteristic.writeValueWithoutResponse(buffer);
+                    } else {
+                        await writeCharacteristic.writeValueWithResponse(buffer);
+                    }
                 }
                 
+                // 日志显示逻辑更新
                 let action = "";
                 if(value === 1) action = "CMD: OPEN LIGHT";
                 else if(value === 2) action = "CMD: BREATH MODE";
                 else if(value === 3) action = "CMD: LIGHT SENSITIVE"; 
-                else if(value === 4) action = "CMD: SERVO MODE"; // [新增] 舵机模式
+                else if(value === 4) action = "CMD: SERVO MODE"; 
                 else if(value === 0) action = "CMD: TURN OFF";
+                else if(value >= 16 && value <= 30) {
+                    // [新增] 调光日志
+                    let percentage = Math.round(((value - 16) / 14) * 100);
+                    action = `CMD: DIMMING [${value}] (${percentage}%)`;
+                }
+                else action = "CMD: UNKNOWN (" + value + ")";
+                
                 addLog(action);
                 
             } catch (error) {
@@ -398,17 +512,15 @@
         }
 
         // --- 接收并处理数据 ---
-        // 假设 MCU 发送的数据结构为：0x55 (头) + Float(Air) + Float(Ambient) + Float(Lamp)
         function handleDataReceived(event) {
             const data = event.target.value;
             // 简单校验
             if (data.byteLength >= 13 && data.getUint8(0) === 0x55) {
                 
                 // 读取3个浮点数 (Little Endian)
-                // 对应原来的 x_pos(Air), y_pos(Ambient), yaw(Lamp)
-                const valAir = data.getFloat32(2, true);     // Index 2
-                const valAmbient = data.getFloat32(6, true); // Index 6
-                const valLamp = data.getFloat32(10, true);   // Index 10
+                const valAir = data.getFloat32(2, true);     
+                const valAmbient = data.getFloat32(6, true); 
+                const valLamp = data.getFloat32(10, true);   
                 
                 updateUI(valAir, valAmbient, valLamp);
             }
@@ -416,7 +528,6 @@
 
         // --- 更新界面显示 ---
         function updateUI(air, ambient, lamp) {
-            // 限制范围 0-100 用于进度条显示
             const clamp = (num) => Math.min(Math.max(num, 0), 100);
 
             // 更新空气质量
