@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>智能台灯控制终端 (Smart Lamp IoT)</title>
+    <title>智能台灯控制终端 (Smart Lamp IoT + AI)</title>
     <style>
         /* --- CSS 变量定义 --- */
         :root {
@@ -20,6 +20,8 @@
             --btn-bg: #FF0000;
             --slider-track: #333;
             --slider-thumb: #FF0000;
+            --chat-user: #FFFF00;
+            --chat-ai: #00FF00;
         }
 
         /* 主题 2: Cyberpunk Neon */
@@ -36,6 +38,8 @@
             --btn-bg: #d600ff;
             --slider-track: #1a2642;
             --slider-thumb: #00f3ff;
+            --chat-user: #d600ff;
+            --chat-ai: #00f3ff;
         }
 
         /* 主题 3: Clean Lab */
@@ -52,6 +56,8 @@
             --btn-bg: #007bff;
             --slider-track: #ddd;
             --slider-thumb: #007bff;
+            --chat-user: #007bff;
+            --chat-ai: #333333;
         }
 
         /* --- 全局样式 --- */
@@ -67,16 +73,25 @@
             overflow: hidden;
         }
 
+        /* 修改布局为 4列 或者调整比例以容纳 AI 面板 */
         .main-container {
             display: grid;
-            grid-template-columns: 25% 45% 30%; 
-            gap: 20px;
+            grid-template-columns: 20% 35% 20% 25%; /* 调整列宽 */
+            gap: 15px;
             height: 100%;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                overflow-y: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
             .main-container {
                 display: flex;
                 flex-direction: column;
@@ -95,16 +110,18 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* 防止内容溢出 */
         }
 
         .panel-title {
             color: var(--text-color);
-            font-size: 24px;
+            font-size: 20px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-bottom: 1px solid #444;
-            padding-bottom: 10px;
+            padding-bottom: 5px;
             font-weight: bold;
+            white-space: nowrap;
         }
 
         /* 日志区域 */
@@ -114,10 +131,10 @@
             border: 1px solid #444;
             color: var(--highlight-color);
             font-family: var(--font-mono);
-            font-size: 13px;
+            font-size: 12px;
             overflow-y: auto;
-            padding: 10px;
-            margin-top: 10px;
+            padding: 5px;
+            margin-top: 5px;
             border-radius: 4px;
         }
 
@@ -130,7 +147,7 @@
             cursor: pointer;
             border-radius: 6px;
             font-family: inherit;
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.2s;
             text-transform: uppercase;
         }
@@ -147,23 +164,22 @@
         .lamp-controls {
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* 改为顶部对齐，方便放滑块 */
-            gap: 12px;
+            gap: 8px;
             height: 100%;
-            padding: 10px;
-            overflow-y: auto; /* 防止内容过多溢出 */
+            padding: 5px;
+            overflow-y: auto;
         }
 
         .big-btn {
-            padding: 15px;
-            font-size: 18px;
+            padding: 12px;
+            font-size: 16px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            flex-shrink: 0; /* 防止按钮被压缩 */
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
         
         .btn-on { border-color: #00ff00; color: #00ff00; }
@@ -181,11 +197,11 @@
         .btn-off { border-color: #ff0000; color: #ff0000; }
         .btn-off:active { background: #ff0000; color: #000; }
 
-        /* --- [新增] 滑动条样式 --- */
+        /* 滑动条样式 */
         .slider-box {
-            margin-top: 10px;
+            margin-top: 5px;
             border: 1px dashed var(--accent-color);
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             text-align: center;
         }
@@ -193,63 +209,34 @@
         .slider-label {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-family: var(--font-mono);
-            font-size: 16px;
+            font-size: 14px;
         }
 
-        /* 滑动条本体美化 */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
             background: transparent;
         }
-
-        input[type=range]:focus {
-            outline: none;
-        }
-
-        /* Webkit (Chrome/Safari) Track */
+        input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
-            height: 8px;
+            height: 6px;
             cursor: pointer;
             background: var(--slider-track);
-            border-radius: 4px;
+            border-radius: 3px;
             border: 1px solid var(--accent-color);
         }
-
-        /* Webkit Thumb (拖动块) */
         input[type=range]::-webkit-slider-thumb {
-            height: 20px;
-            width: 20px;
+            height: 16px;
+            width: 16px;
             border-radius: 50%;
             background: var(--slider-thumb);
             cursor: pointer;
             -webkit-appearance: none;
-            margin-top: -7px; /* 居中 */
-            box-shadow: 0 0 10px var(--slider-thumb);
-        }
-
-        /* Firefox Track */
-        input[type=range]::-moz-range-track {
-            width: 100%;
-            height: 8px;
-            cursor: pointer;
-            background: var(--slider-track);
-            border-radius: 4px;
-            border: 1px solid var(--accent-color);
-        }
-
-        /* Firefox Thumb */
-        input[type=range]::-moz-range-thumb {
-            height: 20px;
-            width: 20px;
-            border: none;
-            border-radius: 50%;
-            background: var(--slider-thumb);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--slider-thumb);
+            margin-top: -6px;
+            box-shadow: 0 0 5px var(--slider-thumb);
         }
 
         /* 仪表盘区域 */
@@ -258,34 +245,35 @@
             flex-direction: column;
             justify-content: space-around;
             height: 100%;
-            gap: 15px;
+            gap: 10px;
         }
 
         .gauge-box {
             border: 1px solid var(--accent-color);
             background: var(--bg-color);
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            flex: 1;
         }
 
         .gauge-label {
-            font-size: 18px;
+            font-size: 14px;
             color: var(--text-color);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             width: 100%;
             text-align: left;
         }
 
         .progress-bar-bg {
             width: 100%;
-            height: 10px;
+            height: 8px;
             background: #333;
-            border-radius: 5px;
+            border-radius: 4px;
             overflow: hidden;
             position: relative;
         }
@@ -298,11 +286,11 @@
         }
 
         .data-value {
-            font-size: 42px;
+            font-size: 28px;
             font-weight: bold;
             color: var(--highlight-color);
             font-family: var(--font-mono);
-            margin-top: 10px;
+            margin-top: 5px;
         }
         
         .theme-select {
@@ -312,6 +300,63 @@
             padding: 5px;
             width: 100%;
             margin-bottom: 10px;
+        }
+
+        /* --- [新增] AI 聊天面板样式 --- */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 10px;
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--grid-color);
+            border-radius: 5px;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        .msg-row { margin-bottom: 8px; line-height: 1.4; }
+        .msg-user { color: var(--chat-user); font-weight: bold; }
+        .msg-ai { color: var(--chat-ai); }
+        .msg-sys { color: #888; font-style: italic; font-size: 12px; }
+
+        .ai-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mic-btn {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 24px;
+            border-radius: 50px; /* 圆角矩形 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--bg-color);
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mic-btn.recording {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
         }
 
     </style>
@@ -330,10 +375,10 @@
 
             <button id="btn-connect" class="matlab-btn" style="width:100%; margin-bottom:10px;">Connect Bluetooth</button>
             
-            <div class="panel-title" style="font-size:18px; margin-top:10px; border:none;">System Log</div>
+            <div class="panel-title" style="font-size:16px; margin-top:10px; border:none;">System Log</div>
             <div id="send-log" class="log-area">
-                <div>[System] Smart Lamp Controller V1.3</div>
-                <div>[Ready] Waiting for connection...</div>
+                <div>[System] Smart Lamp Controller V2.0</div>
+                <div>[AI] Module Loaded...</div>
             </div>
         </div>
 
@@ -346,15 +391,12 @@
                 <button class="matlab-btn big-btn btn-breath" onclick="sendCmd(2)">
                     <span>≈</span> BREATHING MODE
                 </button>
-                
                 <button class="matlab-btn big-btn btn-auto" onclick="sendCmd(3)">
                     <span>👁</span> LIGHT SENSITIVE
                 </button>
-
                 <button class="matlab-btn big-btn btn-servo" onclick="sendCmd(4)">
                     <span>🦾</span> SERVO MODE
                 </button>
-
                 <button class="matlab-btn big-btn btn-off" onclick="sendCmd(0)">
                     <span>○</span> TURN OFF
                 </button>
@@ -366,16 +408,14 @@
                     </div>
                     <input type="range" id="dim-slider" min="16" max="30" step="1" value="16" oninput="handleSlider(this.value)">
                 </div>
-
             </div>
         </div>
 
         <div class="panel-box">
-            <div class="panel-title">Environment Monitor</div>
+            <div class="panel-title">Environment</div>
             <div class="gauge-container">
-                
                 <div class="gauge-box">
-                    <div class="gauge-label">Air Quality Index</div>
+                    <div class="gauge-label">Air Quality</div>
                     <div class="progress-bar-bg">
                         <div id="bar-air" class="progress-bar-fill" style="background-color: #00ff00;"></div>
                     </div>
@@ -397,20 +437,38 @@
                     </div>
                     <div id="val-lamp" class="data-value">0.0%</div>
                 </div>
+            </div>
+        </div>
 
+        <div class="panel-box">
+            <div class="panel-title">AI Butler</div>
+            <div class="chat-container">
+                <div id="chat-history" class="chat-history">
+                    <div class="msg-row msg-ai">Butler: 您好，我是您的桌面智能管家。请点击麦克风下达指令。</div>
+                </div>
+                
+                <div class="ai-controls">
+                    <button id="btn-mic" class="mic-btn" onmousedown="startListening()" onmouseup="stopListening()" ontouchstart="startListening()" ontouchend="stopListening()">
+                        <span>🎤</span> HOLD TO SPEAK
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 全局变量 ---
-        const serviceUUID = 0xFFE0; // 蓝牙服务UUID
+        // --- 1. 基础配置 & 蓝牙变量 ---
+        const serviceUUID = 0xFFE0;
         let device;
         let writeCharacteristic = null;
         const connectBtn = document.getElementById('btn-connect');
         const sendLogDiv = document.getElementById('send-log');
 
-        // --- 主题切换 ---
+        // ⚠️⚠️⚠️ 请在此处填入你的 DeepSeek API Key ⚠️⚠️⚠️
+        const DEEPSEEK_API_KEY = "sk-06463ab75b4a481581eac9d1de08bae2"; 
+        const API_URL = "https://api.deepseek.com/chat/completions";
+
+        // --- 2. 主题切换逻辑 ---
         function changeTheme(themeName) {
             if (themeName === 'matlab') {
                 document.documentElement.removeAttribute('data-theme');
@@ -419,23 +477,15 @@
             }
         }
 
-        // --- [新增] 滑动条处理逻辑 ---
+        // --- 3. 滑动条逻辑 ---
         function handleSlider(value) {
             value = parseInt(value);
-            
-            // 1. 计算显示百分比
-            // 数据范围: 16 (min) 到 30 (max) -> 跨度 14
-            // 映射: 16->0%, 30->100%
             let percentage = Math.round(((value - 16) / 14) * 100);
-            
-            // 更新UI文本
             document.getElementById('dim-percent-display').innerText = percentage + "%";
-            
-            // 2. 发送数据
             sendCmd(value);
         }
 
-        // --- 蓝牙连接逻辑 ---
+        // --- 4. 蓝牙连接逻辑 (保持不变) ---
         connectBtn.addEventListener('click', async () => {
             try {
                 addLog("Searching for device...");
@@ -449,12 +499,10 @@
                 const characteristics = await service.getCharacteristics();
                 
                 for (const c of characteristics) {
-                    // 开启通知接收数据
                     if (c.properties.notify) { 
                         await c.startNotifications(); 
                         c.addEventListener('characteristicvaluechanged', handleDataReceived); 
                     }
-                    // 获取写权限
                     if (c.properties.write || c.properties.writeWithoutResponse) {
                         writeCharacteristic = c;
                     }
@@ -472,14 +520,8 @@
             }
         });
 
-        // --- 发送指令 ---
+        // --- 5. 蓝牙发送/接收逻辑 (保持不变) ---
         async function sendCmd(value) {
-            if (!writeCharacteristic) {
-                // 如果未连接，仅在控制台/UI日志显示，不报错
-                // addLog("Not Connected! (Sim: " + value + ")", "gray"); 
-                // return; // 调试时可以注释掉 return 
-            }
-            
             try {
                 if (writeCharacteristic) {
                     const buffer = new Uint8Array([value]);
@@ -490,20 +532,10 @@
                     }
                 }
                 
-                // 日志显示逻辑更新
-                let action = "";
-                if(value === 1) action = "CMD: OPEN LIGHT";
-                else if(value === 2) action = "CMD: BREATH MODE";
-                else if(value === 3) action = "CMD: LIGHT SENSITIVE"; 
-                else if(value === 4) action = "CMD: SERVO MODE"; 
-                else if(value === 0) action = "CMD: TURN OFF";
-                else if(value >= 16 && value <= 30) {
-                    // [新增] 调光日志
-                    let percentage = Math.round(((value - 16) / 14) * 100);
-                    action = `CMD: DIMMING [${value}] (${percentage}%)`;
-                }
-                else action = "CMD: UNKNOWN (" + value + ")";
-                
+                // 简化的日志逻辑
+                let action = "CMD: " + value;
+                if(value === 1) action = "CMD: OPEN";
+                else if(value === 0) action = "CMD: OFF";
                 addLog(action);
                 
             } catch (error) {
@@ -511,45 +543,148 @@
             }
         }
 
-        // --- 接收并处理数据 ---
         function handleDataReceived(event) {
             const data = event.target.value;
-            // 简单校验
             if (data.byteLength >= 13 && data.getUint8(0) === 0x55) {
-                
-                // 读取3个浮点数 (Little Endian)
                 const valAir = data.getFloat32(2, true);     
                 const valAmbient = data.getFloat32(6, true); 
                 const valLamp = data.getFloat32(10, true);   
-                
                 updateUI(valAir, valAmbient, valLamp);
             }
         }
 
-        // --- 更新界面显示 ---
         function updateUI(air, ambient, lamp) {
             const clamp = (num) => Math.min(Math.max(num, 0), 100);
-
-            // 更新空气质量
             document.getElementById('val-air').innerText = air.toFixed(1) + "%";
             document.getElementById('bar-air').style.width = clamp(air) + "%";
-            
-            // 更新环境光
             document.getElementById('val-ambient').innerText = ambient.toFixed(1) + "%";
             document.getElementById('bar-ambient').style.width = clamp(ambient) + "%";
-
-            // 更新台灯亮度
             document.getElementById('val-lamp').innerText = lamp.toFixed(1) + "%";
             document.getElementById('bar-lamp').style.width = clamp(lamp) + "%";
         }
 
-        // --- 日志辅助 ---
         function addLog(msg, color=null) {
             const now = new Date().toLocaleTimeString();
             const colorStyle = color ? `style="color:${color}"` : "";
             const html = `<div ${colorStyle}>[${now}] ${msg}</div>`;
             sendLogDiv.innerHTML = html + sendLogDiv.innerHTML;
-            if (sendLogDiv.childElementCount > 50) sendLogDiv.removeChild(sendLogDiv.lastChild);
+        }
+
+        // =========================================================
+        // --- 6. [新增] AI 智能管家 & 语音识别逻辑 ---
+        // =========================================================
+        
+        const chatHistoryDiv = document.getElementById('chat-history');
+        const micBtn = document.getElementById('btn-mic');
+        let recognition;
+        
+        // 消息历史记录 (用于维持 AI 上下文)
+        let messagesContext = [
+            {
+                role: "system", 
+                content: "你现在是【桌面智能管家】。你的职责是管理台灯系统。你的语气要专业、简洁、礼貌，像一个人工智能助手。如果用户想控制灯，你可以建议他们使用右侧的按钮。不需要太啰嗦。请用中文回答。"
+            }
+        ];
+
+        // 初始化语音识别 (Web Speech API)
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false; // 录完一句自动停
+            recognition.interimResults = false;
+            recognition.lang = 'zh-CN'; // 识别中文
+
+            recognition.onstart = function() {
+                micBtn.classList.add('recording');
+                micBtn.innerHTML = "<span>🎧</span> LISTENING...";
+            };
+
+            recognition.onend = function() {
+                micBtn.classList.remove('recording');
+                micBtn.innerHTML = "<span>🎤</span> HOLD TO SPEAK";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                addChatMessage("User", transcript);
+                // 发送给 DeepSeek
+                callDeepSeekAPI(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                addLog("Speech Error: " + event.error, "red");
+                micBtn.classList.remove('recording');
+            };
+        } else {
+            alert("您的浏览器不支持语音识别，请使用 Chrome 或 Edge。");
+        }
+
+        // 按钮交互逻辑
+        function startListening() {
+            if (recognition) recognition.start();
+        }
+        function stopListening() {
+            if (recognition) recognition.stop();
+        }
+
+        // 在聊天框添加消息
+        function addChatMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = "msg-row";
+            if (role === "User") {
+                div.innerHTML = `<span class="msg-user">You:</span> ${text}`;
+            } else {
+                div.innerHTML = `<span class="msg-ai">Butler:</span> ${text}`;
+            }
+            chatHistoryDiv.appendChild(div);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; // 自动滚动到底部
+        }
+
+        // 调用 DeepSeek API
+        async function callDeepSeekAPI(userText) {
+            // 1. 添加用户消息到上下文
+            messagesContext.push({ role: "user", content: userText });
+            
+            // 显示正在思考
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = "msg-row msg-sys";
+            loadingDiv.innerText = "Thinking...";
+            chatHistoryDiv.appendChild(loadingDiv);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+
+            try {
+                // 2. 发起 Fetch 请求
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + DEEPSEEK_API_KEY
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: messagesContext,
+                        temperature: 1.0 // 稍微降低温度，让管家更稳重
+                    })
+                });
+
+                // 移除 "Thinking..."
+                chatHistoryDiv.removeChild(loadingDiv);
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiReply = data.choices[0].message.content;
+
+                // 3. 显示 AI 回复并记录上下文
+                addChatMessage("AI", aiReply);
+                messagesContext.push({ role: "assistant", content: aiReply });
+
+            } catch (error) {
+                if(loadingDiv.parentNode) chatHistoryDiv.removeChild(loadingDiv);
+                addLog("AI Error: " + error.message, "red");
+                addChatMessage("AI", "[连接中断] " + error.message);
+            }
         }
 
     </script>
